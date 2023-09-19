@@ -1,17 +1,27 @@
 ﻿using System.Drawing;
+using System.Drawing.Imaging;
 
-byte[] ImageToByteArray(System.Drawing.Image imageIn)
+//convert bytearray to image
+System.Drawing.Image ByteArrayToImage(byte[] byteArrayIn)
 {
-   using (var ms = new MemoryStream())
+   using (MemoryStream mStream = new MemoryStream(byteArrayIn))
    {
-      imageIn.Save(ms,imageIn.RawFormat);
-      return  ms.ToArray();
+      return Image.FromStream(mStream);
    }
 }
 
-Image image = Image.FromFile("image.jpg");
-byte[] bytes = ImageToByteArray(image);
-
-for (int i = 0; i < bytes.Length; i++) {
-    Console.Write(bytes[i].ToString() + " ");
+//another easy way to convert image to bytearray
+byte[] ImgToByteConverter(Image inImg)
+{
+   ImageConverter imgCon = new ImageConverter();
+   return (byte[])imgCon.ConvertTo(inImg, typeof(byte[]));
 }
+
+Image image = Image.FromFile("image.jpg");
+byte[] bytes = ImgToByteConverter(image);
+
+// for (int i = 0; i < bytes.Length; i++) {
+//     Console.Write(bytes[i].ToString() + " ");
+// }
+
+ByteArrayToImage(bytes).Save("output.jpg", ImageFormat.Jpeg);
