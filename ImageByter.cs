@@ -43,27 +43,26 @@ public class ImageByter {
         int bytesLength = Math.Abs(bmpData.Stride) * bmpData.Height;
         
         _bytes = new byte[bytesLength];
-        _bits = new BitArray(Bytes);
 
-        Marshal.Copy(pointeur, Bytes, 0, bytesLength);
+        Marshal.Copy(pointeur, _bytes, 0, bytesLength);
+
+        _bits = new BitArray(_bytes);
     }
 
     public void SaveFile(string outputFileName) {
         if (inputImage == null || bmpData == null)
             return;
 
-        Marshal.Copy(Bytes, 0, pointeur, Bytes.Length);
+        Marshal.Copy(_bytes, 0, pointeur, _bytes.Length);
 
         inputImage.UnlockBits(bmpData);
 
         inputImage.Save(outputFileName);
     }
 
-    static byte[] BitArrayToByteArray(BitArray bits)
-    {
-        var reversed = new BitArray(bits.Cast<bool>().Reverse().ToArray());
-        byte[] ret = new byte[(reversed.Length - 1) / 8 + 1];
-        reversed.CopyTo(ret, 0);
-        return ret;
+    static byte[] BitArrayToByteArray(BitArray bits) {
+        byte[] bytes = new byte[(bits.Count - 1) / 8 + 1];
+        bits.CopyTo(bytes, 0);
+        return bytes;
     }
 }
