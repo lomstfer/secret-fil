@@ -60,7 +60,7 @@ public class ImageByter {
         inputImage.Save(outputFileName);
     }
 
-    static byte[] BitArrayToByteArray(BitArray bits) {
+    public static byte[] BitArrayToByteArray(BitArray bits) {
         byte[] bytes = new byte[(bits.Count - 1) / 8 + 1];
         bits.CopyTo(bytes, 0);
         return bytes;
