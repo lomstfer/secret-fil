@@ -39,7 +39,7 @@ if (args[0] == "-write") {
 }
 
 else if (args[0] == "-read") {
-    string filename = "image.png";
+    string filename = "message_image.png";
     ImageByter imgb = new(filename);
 
     Console.WriteLine(GetMessage(imgb.Bits));
@@ -60,6 +60,8 @@ static BitArray EmbedMessage(BitArray bits, BitArray messageBits, int messageByt
         Console.WriteLine("Message too long / image too small. No message was put in the image :(");
         return bits;
     }
+
+    int fullFillCount = (messageBits.Length + messageByteLengthBits.Length) * 8 / bits.Length;
 
     int bitIndex = 0;
     int bitIndexRestartAt = 1;
