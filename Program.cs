@@ -24,10 +24,7 @@ if (args[0] == "-write") {
     string messageStr = File.ReadAllText("message.txt");
     byte[] messageBytes = Encoding.ASCII.GetBytes(messageStr);
 
-    // Console.WriteLine("messageBytes.Length " + messageBytes.Length.ToString());
-    // Console.WriteLine("imgb.Bytes.Length " + imgb.Bytes.Length.ToString());
-
-    if (messageBytes.Length > imgb.Bytes.Length) {
+    if (messageBytes.Length > imgb.Bytes.Length / 8) {
         Console.WriteLine("Message too long / image too small. No message was put in the image :(");
         return;
     }
@@ -52,18 +49,10 @@ else {
 static BitArray EmbedMessage(BitArray bits, BitArray messageBits, int messageBytesLength) {
     BitArray messageByteLengthBits = new BitArray(BitConverter.GetBytes(messageBytesLength));
 
-    // Console.WriteLine("bits.Length " + bits.Length.ToString());
-    // Console.WriteLine("messageBits.Length " + messageBits.Length.ToString());
-    // Console.WriteLine("messageByteLengthBits.Length " + messageByteLengthBits.Length.ToString());
-
-    if (messageBits.Length + messageByteLengthBits.Length > bits.Length) {
+    if (messageBits.Length + messageByteLengthBits.Length > bits.Length / 8) {
         Console.WriteLine("Message too long / image too small. No message was put in the image :(");
         return bits;
     }
-
-    int fullFillCount = (messageBits.Length + messageByteLengthBits.Length) * 8 / bits.Length;
-    
-    Console.WriteLine(fullFillCount);
     
     // store messageLength
     int bitIndex = 0;
@@ -72,68 +61,30 @@ static BitArray EmbedMessage(BitArray bits, BitArray messageBits, int messageByt
         bitIndex += 8;
     }
 
-    // store message 
-    int spacing = bits.Length / (messageBits.Length + messageByteLengthBits.Length);
-    if (fullFillCount == 0) { // no looping needed => spacing at first layer
-        for (int i = 0; i < messageBits.Length; i++) {
-            bits.Set(bitIndex, messageBits.Get(i));
-            bitIndex += spacing * 8;
-        }
-        return bits;
-    }
-
-    // multiple layers needed => no spacing until last layer
-    int bitIndexRestartAt = 1;
-    bool lastLayer = false;
+    // store message
+    int spacing = (bits.Length - messageByteLengthBits.Length) / messageBits.Length;
     for (int i = 0; i < messageBits.Length; i++) {
-        if (bitIndex >= bits.Length && !lastLayer) {
-            bitIndex = bitIndexRestartAt;
-            bitIndexRestartAt += 1;
-        }
-
         bits.Set(bitIndex, messageBits.Get(i));
-        
-        if (bitIndexRestartAt > fullFillCount) {
-            lastLayer = true;
-        }
-
-        if (lastLayer) {
-            bitIndex += spacing * 8;
-        }
-        else {
-            bitIndex += 8;
-        }
+        bitIndex += spacing;
     }
-
     return bits;
 }
 
 static string GetMessage(BitArray bits) {
     BitArray messageByteLengthBits = new(32);
     int bitIndex = 0;
-    int bitIndexRestartAt = 1;
     for (int i = 0; i < 32; i++) {
-        if (bitIndex >= bits.Length) {
-            bitIndex = bitIndexRestartAt;
-            bitIndexRestartAt += 1;
-        }
-
         messageByteLengthBits.Set(i, bits.Get(bitIndex));
         bitIndex += 8;
     }
-
     int messageByteLength = BitConverter.ToInt32(ImageByter.BitArrayToByteArray(messageByteLengthBits));
 
+    int spacing = (bits.Length - 32) / (messageByteLength * 8);
+
     BitArray output = new(messageByteLength * 8);
-
     for (int i = 0; i < output.Length; i += 1) {
-        if (bitIndex >= bits.Length) {
-            bitIndex = bitIndexRestartAt;
-            bitIndexRestartAt += 1;
-        }
-
         output.Set(i, bits.Get(bitIndex));
-        bitIndex += 8/* bits.Length / output.Length */;
+        bitIndex += spacing;
     }
 
     return Encoding.ASCII.GetString(ImageByter.BitArrayToByteArray(output));
