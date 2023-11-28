@@ -10,40 +10,71 @@ if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
     return;
 }
 
+static void PrintHelp() {
+    Console.WriteLine("Use -write [message file] [input image file] [output image file] to embedd a message. Example:\n\tsecret-fil -write message.txt image.png output.png");
+    Console.WriteLine("");
+    Console.WriteLine("Use -read [image file] to read a message. Example:\n\tsecret-fil -read image.png");
+}
+
+if (args.Length <= 1) {
+    PrintHelp();
+    return;
+}
+
 if (args[0] == "-write") {
-    string filename = "image.png";
+    if (args.Length <= 3) {
+        PrintHelp();
+        return;
+    }
+    
+    if (!File.Exists(args[1])) {
+        Console.WriteLine("Message file does not exist.");
+        if (!File.Exists(args[2])) {
+            Console.WriteLine("Image file does not exist.");
+            return;
+        }
+        return;
+    }
+    if (!File.Exists(args[2])) {
+        Console.WriteLine("Image file does not exist.");
+        return;
+    }
+
+    string filename = args[2];
     ImageByter imgb = new(filename);
 
-    // // debug random message. example: -write 20000. 20000 random bytes as message
-    // Random random = new();
-    // byte[] testOutputBytes = new byte[int.Parse(args[1])];
-    // random.NextBytes(testOutputBytes);
-    // //File.WriteAllText("message.txt", Encoding.ASCII.GetString(testOutputBytes));
-    // // --
-    // byte[] messageBytes = testOutputBytes;
-    string messageStr = File.ReadAllText("message.txt");
+    string messageStr = File.ReadAllText(args[1]);
     byte[] messageBytes = Encoding.ASCII.GetBytes(messageStr);
+    if (messageBytes.Length == 0) {
+        Console.WriteLine("Message file was empty.");
+        return;
+    }
 
     if (messageBytes.Length > imgb.Bytes.Length / 8) {
-        Console.WriteLine("Message too long / image too small. No message was put in the image :(");
+        Console.WriteLine("Message too long / image too small.");
         return;
     }
     BitArray messageBits = new BitArray(messageBytes);
 
     imgb.Bits = EmbedMessage(imgb.Bits, messageBits, messageBytes.Length);
 
-    imgb.SaveFile("message_image.png");
+    imgb.SaveFile(args[3]);
 }
 
 else if (args[0] == "-read") {
-    string filename = "message_image.png";
+    if (!File.Exists(args[1])) {
+        Console.WriteLine("Image file does not exist.");
+        return;
+    }
+    string filename = args[1];
     ImageByter imgb = new(filename);
 
     Console.WriteLine(GetMessage(imgb.Bits));
 }
 
 else {
-    Console.WriteLine("Use -write or -read");
+    PrintHelp();
+    return;
 }
 
 static BitArray EmbedMessage(BitArray bits, BitArray messageBits, int messageBytesLength) {
