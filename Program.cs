@@ -35,8 +35,6 @@ if (args[0] == "-test") {
     byte[] testOutputBytes = new byte[(int)(float.Parse(args[2])/100f*(imgb.Bytes.Length/8))];
     random.NextBytes(testOutputBytes);
     byte[] messageBytes = testOutputBytes;
-    Console.WriteLine(imgb.Bytes.Length);
-    Console.WriteLine(messageBytes.Length);
 
     if (messageBytes.Length > imgb.Bytes.Length / 8) {
         Console.WriteLine("Message too long / image too small.");
@@ -123,10 +121,6 @@ static BitArray EmbedMessage(BitArray bits, BitArray messageBits, int messageByt
     // store message
     int spacing = bits.Length / (messageBits.Length*8);
     for (int i = 0; i < messageBits.Length; i++) {
-        if (bitIndex >= bits.Length) {
-            Console.WriteLine("hej");
-            continue;
-        }
         bits.Set(bitIndex*8, messageBits.Get(i));
         bitIndex += spacing;
     }
