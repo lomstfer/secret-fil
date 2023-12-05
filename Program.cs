@@ -21,6 +21,31 @@ if (args.Length <= 1) {
     return;
 }
 
+// -test img.png 25
+if (args[0] == "-test") {
+    if (args.Length < 3) {
+        Console.WriteLine("no");
+        return;
+    }
+
+    ImageByter imgb = new(args[1]);
+
+    Random random = new();
+    byte[] testOutputBytes = new byte[(int)(int.Parse(args[2])/100f*imgb.Bytes.Length)];
+    random.NextBytes(testOutputBytes);
+    byte[] messageBytes = testOutputBytes;
+
+    if (messageBytes.Length > imgb.Bytes.Length / 8) {
+        Console.WriteLine("Message too long / image too small.");
+        return;
+    }
+    BitArray messageBits = new BitArray(messageBytes);
+
+    imgb.Bits = EmbedMessage(imgb.Bits, messageBits, messageBytes.Length);
+
+    imgb.SaveFile("testOutput.png");
+}
+
 if (args[0] == "-write") {
     if (args.Length <= 3) {
         PrintHelp();
