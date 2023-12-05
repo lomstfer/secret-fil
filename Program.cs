@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Diagnostics;
 using System.Globalization;
+using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -31,9 +32,11 @@ if (args[0] == "-test") {
     ImageByter imgb = new(args[1]);
 
     Random random = new();
-    byte[] testOutputBytes = new byte[(int)(int.Parse(args[2])/100f*imgb.Bytes.Length)];
+    byte[] testOutputBytes = new byte[(int)(float.Parse(args[2])/100f*(imgb.Bytes.Length/8))];
     random.NextBytes(testOutputBytes);
     byte[] messageBytes = testOutputBytes;
+    Console.WriteLine(imgb.Bytes.Length);
+    Console.WriteLine(messageBytes.Length);
 
     if (messageBytes.Length > imgb.Bytes.Length / 8) {
         Console.WriteLine("Message too long / image too small.");
@@ -46,7 +49,7 @@ if (args[0] == "-test") {
     imgb.SaveFile("testOutput.png");
 }
 
-if (args[0] == "-write") {
+else if (args[0] == "-write") {
     if (args.Length <= 3) {
         PrintHelp();
         return;
@@ -118,9 +121,13 @@ static BitArray EmbedMessage(BitArray bits, BitArray messageBits, int messageByt
     }
 
     // store message
-    int spacing = (bits.Length - messageByteLengthBits.Length) / messageBits.Length;
+    int spacing = bits.Length / (messageBits.Length*8);
     for (int i = 0; i < messageBits.Length; i++) {
-        bits.Set(bitIndex, messageBits.Get(i));
+        if (bitIndex >= bits.Length) {
+            Console.WriteLine("hej");
+            continue;
+        }
+        bits.Set(bitIndex*8, messageBits.Get(i));
         bitIndex += spacing;
     }
     return bits;
@@ -135,11 +142,11 @@ static string GetMessage(BitArray bits) {
     }
     int messageByteLength = BitConverter.ToInt32(ImageByter.BitArrayToByteArray(messageByteLengthBits));
 
-    int spacing = (bits.Length - 32) / (messageByteLength * 8);
+    int spacing = bits.Length / (messageByteLength * 8 * 8);
 
     BitArray output = new(messageByteLength * 8);
     for (int i = 0; i < output.Length; i += 1) {
-        output.Set(i, bits.Get(bitIndex));
+        output.Set(i, bits.Get(bitIndex*8));
         bitIndex += spacing;
     }
 
